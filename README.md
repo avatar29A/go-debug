@@ -1,2 +1,2 @@
 # go-debug
-"go-debug" is mode for Emacs which is front-end to "delve".
+Mode for Emacs ([Spacemacs](http://spacemacs.org)) which is front-end to [delve](https://github.com/derekparker/delve).
