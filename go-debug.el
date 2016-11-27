@@ -16,21 +16,48 @@
 (require 'cl-lib)
 (require 'go-mode)
 
-(defvar path-to-dlv "/home/warlock/workspace/bin/dlv")
-(setq path-to-dlv "/home/warlock/workspace/bin/dlv1")
+;;; Variables
 
+;;Full path to delve debugger
+(defvar path-to-dlv "/home/warlock/workspace/bin/dlv")
+
+;; Current package version
 (defvar gdg-version "0.1.0")
-(defvar gdg--dlv-is-running nil)
+
+;; Address to remote dlv server
+(defvar gdg--dlv-host "localhost")
+
+;; Port to remote dlv server
+(defvar gdg--dlv-port 27000)
+
+;; Delve process' PID
+(defvar gdg--dlv-pid nil)
+
+;;; Internal Functions & Macros
 
 (defun gdg--dlv-exists-p ()
   "Check that path to dlv is exists"
-  (file-exists-p path-to-dlv))
+  (cond
+   ((< 0 (length (shell-command-to-string "which dlv")))
+    (setq path-to-dlv "dlv")
+    t)
+   ((file-exists-p path-to-dlv)
+    t)))
 
 (defmacro dlv (&rest body)
   "This macros wrap all code to check if dlv is exists in system."
   (if (gdg--dlv-exists-p)
       `(progn ,@body)
     `(message "dlv is not found. Please check path-to-dlv (%s) variable." path-to-dlv)))
+
+(defun gdg--which-dlv ()
+  "Search path to dlv on computer and print into new buffer."
+  (interactive)
+  (let ((command (format "which %s" path-to-dlv)))
+    (with-output-to-temp-buffer bufname
+      (call-process-shell-command command nil bufname nil))))
+
+;;; External Functions
 
 (defun gdg-start (path-to-package)
   "Start dlv as headless instance. Wait to connect to localhost:0")
@@ -51,7 +78,21 @@
   "Compile and begin tracing program")
 
 (defun gdg-version ()
+  "Show dlv and plugin's version"
+  (interactive)
   (dlv
-   (message "dlv (%s), go-debug (%s)", "0.11.0-alpha", gdg-version)))
+   (let* (
+          (out (shell-command-to-string (format "%s version" path-to-dlv)))
+          (lines (split-string out "\n"))
+          (dlv-version (second lines)))
+     (message "dlv (%s), go-debug (%s)" dlv-version gdg-version))))
+
+
+(defun call-dlv ()
+  (interactive)
+  (call-process-shell-command "dlv" nil t nil))
+
+
+
 
 (provide 'go-debug)
