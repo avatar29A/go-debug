@@ -44,5 +44,7 @@
       (propertize (format "%3s" symbol 'face 'linum)))))
 
 ;;; Use:
-(setq linum-format 'gdg-linum-update)
+;;; (setq linum-format 'gdg-linum-update)
+
+(provide 'gdg-ui)
 

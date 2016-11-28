@@ -15,6 +15,9 @@
 
 (require 'cl-lib)
 (require 'go-mode)
+(require 'gdg-ui)
+
+(load-file "")
 
 ;;; Variables
 
@@ -32,6 +35,9 @@
 
 ;; Delve process' PID
 (defvar gdg--dlv-pid nil)
+
+;; Active breakpoints
+(defvar gdg--breakpoints ())
 
 ;;; Internal Functions & Macros
 
@@ -56,6 +62,20 @@
   (let ((command (format "which %s" path-to-dlv)))
     (with-output-to-temp-buffer bufname
       (call-process-shell-command command nil bufname nil))))
+
+(defun gdg--set-breakpoint (line filename)
+  "Set a new breakpoint"
+  (add-to-list 'gdg--breakpoints (list line filename)))
+
+(defun gdg--remove-breakpoint (line filename)
+  "Remove breakpoint"
+  (setq gdg--breakpoints (remove-if (lambda (el) (and
+                                                  (equal (first el) line)
+                                                  (equal (second el) filename)))
+                                    gdg--breakpoints)))
+
+(defun gdg--remove-all-breakpoints ()
+  (setq gdg--breakpoints ()))
 
 ;;; External Functions
 
@@ -88,6 +108,8 @@
      (message "dlv (%s), go-debug (%s)" dlv-version gdg-version))))
 
 
+
+
 (defun call-dlv ()
   (interactive)
   (call-process-shell-command "dlv" nil t nil))
@@ -95,4 +117,4 @@
 
 
 
-(provide 'go-debug)
+(provide 'gdg)
