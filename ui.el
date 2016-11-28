@@ -13,6 +13,9 @@
 
 ;;; Code
 
+(eval-when-compile (require 'cl))
+(require 'linum)
+
 ;;;; Faces
 (defface gdg--line-face
   '((t :inherit linum :foreground "red" :background "#444444" :weight bold))
@@ -21,26 +24,25 @@
 
 ;;;; Variables
 
-(defvar gdg--last--cursor-pos 0
+(defvar gdg--last-cursor-pos 0
   "Store last position.")
-   
+
 (defvar gdg--user-format linum-format
   "Store the users linum-format")
-  
+
 ;;;; Advices
-(defadvice linum-update (before relative-linum-update activate)
+(defadvice linum-update (before gdg-linum-update activate)
   "This advice get the last position of linum."
-  (setq gdg--last--cursor-pos (line-number-at-pos)))
-  
+  (setq gdg--last-cursor-pos (line-number-at-pos)))
+
 (defun gdg-linum-update (line-number)
   "Customise linum drawing."
   (let ((symbol (number-to-string line-number))
-        (face 'gdg--line-face)
-        (current-pos linum-relative-last-pos))
-    (if (= line-number current-pos)
+        (face 'gdg--line-face))
+    (if (= line-number gdg--last-cursor-pos)
         (propertize "=>" 'face face)
       (propertize (format "%3s" symbol 'face 'linum)))))
 
 ;;; Use:
-;;; (setq linum-format 'line-custom)
+(setq linum-format 'gdg-linum-update)
 
