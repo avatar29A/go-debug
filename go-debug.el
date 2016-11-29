@@ -15,13 +15,7 @@
 
 (require 'cl-lib)
 (require 'go-mode)
-<<<<<<< HEAD
 (require 'gdg-dlv)
-=======
-(require 'gdg-ui)
-
-(load-file "")
->>>>>>> b850241... Added internal structure for store breakpoints
 
 ;;; Variables
 
@@ -33,11 +27,7 @@
 
 (defvar gdg--debuggers (make-hash-table :test 'equal))
 
-;; Active breakpoints
-(defvar gdg--breakpoints ())
-
 ;;; Internal Functions & Macros
-
 
 (defun gdg--set-breakpoint (line filename)
   "Set a new breakpoint"
@@ -124,17 +114,6 @@
           (dlv-version (second lines)))
      (message "dlv (%s), go-debug (%s)" dlv-version gdg-version))))
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> b850241... Added internal structure for store breakpoints
-(defun call-dlv ()
-  (interactive)
-  (call-process-shell-command "dlv" nil t nil))
-
-<<<<<<< HEAD
 ;;; Tests
 
 (defmacro test-cleaner(&rest body)
@@ -153,7 +132,7 @@
   "Tets that remove breakpoint is work"
   (test-cleaner
    (gdg--set-breakpoint "main.go" 30)
-   (should (equal (length (gdg-remove-breakpoint "main.go" 30)) 0))))
+   (should (equal (length (gdg--remove-breakpoint "main.go" 30)) 0))))
 
 (ert-deftest test-is-go-source ()
   ""
@@ -170,9 +149,4 @@
   (should (not (gdg--check-remote-dlv-addr-p "192.168.243.20")))
   (should (not (gdg--check-remote-dlv-addr-p ""))))
 
-=======
-
-
-
->>>>>>> b850241... Added internal structure for store breakpoints
 (provide 'gdg)
