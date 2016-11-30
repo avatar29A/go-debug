@@ -15,28 +15,55 @@
 
 (eval-when-compile (require 'cl))
 
-;;Full path to delve debugger
-(defvar path-to-dlv "/home/warlock/workspace/bin/dlv")
-
 ;; Address to remote dlv server
 (defvar gdg--dlv-host "localhost")
 
 ;; Port to remote dlv server
 (defvar gdg--dlv-port 27000)
 
-
 ;;; Debugger
 
 (defclass breakpoint ()
-  ((file :initarg :file)
+  ((name :initarg :name)
+   (id :initarg :id)
+   (file :initarg :file)
    (line :initarg :line))
   "Presents breakpoint instance")
 
 (defclass debugger ()
-  ((breakpoints :initarg :breakpoints :default nil)
+  ((breakpoints :initarg :breakpoints :initform nil)
    (pid :initarg :pid)
+   (process :initarg :process :initform nil)
+   (process-buffer :initarg :process-buffer :initform nil)
    (projectfile :initarg :projectfile))
   "Presents debugger instance")
+
+(defmethod break ((d debugger) position)
+  "break (alias: b) ------------ Sets a breakpoint."
+  (invoke d (format "b %s" position)))
+
+(defmethod continue ((d debugger))
+  "continue (alias: c) --------- Run until breakpoint or program termination."
+  (invoke d (format "c")))
+
+(defmethod clear ((d debugger) bp)
+  "clear ----------------------- Deletes breakpoint."
+  (invoke d
+          (format "clear %s"
+                  (cond ((slot-boundp d id)
+                         (oref d id))
+                        ((slot-boundp d name)
+                         (oref d name))
+                        (t
+                         (error "%s" "Invalid breakpoint. Breakpoint have to has id or name."))))))
+
+(defmethod stop ((d debugger))
+  (when (not (null (oref d process)))
+    (delete-process (oref d process))))
+
+(defmethod invoke ((d debugger) command)
+  (when (not (null (oref d process)))
+    (process-send-string (oref d process) command)))
 
 ;;; Macros
 
@@ -50,12 +77,7 @@
 
 (defun gdg--dlv-exists-p ()
   "Check that path to dlv is exists"
-  (cond
-   ((< 0 (length (shell-command-to-string "which dlv")))
-    (setq path-to-dlv "dlv")
-    t)
-   ((file-exists-p path-to-dlv)
-    t)))
+  (< 0 (length (shell-command-to-string "which dlv"))))
 
 (defun gdg--which-dlv ()
   "Search path to dlv on computer and print into new buffer."
@@ -71,7 +93,14 @@
    ((not (null connect))
     (gdg--run-dlv "connect" connect))
    ((not (null debug))
-    (gdg--run-dlv "debug" debug))
+    (dlv
+     (let* ((pbuffer
+             (get-buffer-create
+              (format "dlv [%s]" debug)))
+            (p
+             (start-process-shell-command pbuffer
+                                          (fomrat "dlv debug %s" debug))))
+       (make-instance 'debugger :process p :process-buffer pbuffer :projectfile debug))))
    (t
     (message "Unknown command. Expected one from (attach, connect, debug)."))))
 
