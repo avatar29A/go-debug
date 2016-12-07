@@ -76,7 +76,9 @@
 (defun gdg-debug (filename)
   (interactive "fSelect file with main package: ")
   (if (gdg--is-go-source-p filename)
-      (message "file was loaded.")
+      (let ((debugger (gdg--make-debugger :debug filename)))
+        (continue debugger)
+        (quit debugger))
     (message "Expected go source file, but got %s" filename))
   "Compile and begin debugging main package in current directory, or the package specified.")
 

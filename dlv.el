@@ -44,7 +44,7 @@
 
 (defmethod continue ((d debugger))
   "continue (alias: c) --------- Run until breakpoint or program termination."
-  (invoke d (format "c")))
+  (invoke d "c"))
 
 (defmethod clear ((d debugger) bp)
   "clear ----------------------- Deletes breakpoint."
@@ -57,13 +57,19 @@
                         (t
                          (error "%s" "Invalid breakpoint. Breakpoint have to has id or name."))))))
 
+(defmethod quit ((d debugger))
+  "Terminate debugger"
+  (invoke d "quit"))
+
 (defmethod stop ((d debugger))
   (when (not (null (oref d process)))
     (delete-process (oref d process))))
 
 (defmethod invoke ((d debugger) command)
   (when (not (null (oref d process)))
-    (process-send-string (oref d process) command)))
+    (process-send-string (oref d process) command)
+    (sleep-for 0 500)
+    (accept-process-output)))
 
 ;;; Macros
 
@@ -94,12 +100,12 @@
     (gdg--run-dlv "connect" connect))
    ((not (null debug))
     (dlv
-     (let* ((pbuffer
+     (let* ((buf-name (format "dlv [%s]" debug))
+            (pbuffer
              (get-buffer-create
               (format "dlv [%s]" debug)))
             (p
-             (start-process-shell-command pbuffer
-                                          (fomrat "dlv debug %s" debug))))
+             (start-process buf-name pbuffer (format "dlv debug %s" debug))))
        (make-instance 'debugger :process p :process-buffer pbuffer :projectfile debug))))
    (t
     (message "Unknown command. Expected one from (attach, connect, debug)."))))
